@@ -14,10 +14,10 @@ import threading
 from PIL import Image
 from datetime import datetime, date
 from os.path import dirname, join, abspath
-from prediction import detect, get_img_size
+from src.prediction import detect, get_img_size
 from werkzeug.exceptions import HTTPException
 from flask import Flask, request, session, json
-from dashboardNeeds.main import update_api_status, append_data, save_img, connect_db, saveImgReal
+from src.to_dashboard.main import update_api_status, append_data, save_img, connect_db, saveImgReal
 
 lock = threading.Lock()
 
@@ -75,10 +75,6 @@ def predict():
         f = open(temp_json)
         data_json = json.load(f)
         
-        saveImgReal(img_temp=temp_file, labels_temp=temp_json, bankimg_path = saveImgReal_path)
-        img_path = save_img(temp_file, data_json, bankimg_path)
-        
-        
         im_width, im_height = get_img_size(temp_file)
         data = {
             "success": True,
@@ -95,7 +91,7 @@ def predict():
             id_api = 3,
             ip_address = ip_addr,
             request_date = datetime.now(),
-            url_api = "http://ai.quick.com/v1/materials_detection",
+            url_api = "http://localhost:2060/v1/materials_detection",
             response = data,
             response_time = round((time.time() - start_time) * 100 )
         )
@@ -107,7 +103,7 @@ def predict():
             request_date = datetime.now(),
             pred_transact = len(data_json),
             response_time = round((time.time() - start_time) * 100 ),
-            img_path = img_path
+            img_path = 'None'
         )
         data['id_counting'] = last_id
         data['time'] = str(round(time.time() - start_time, 2))+'s'
@@ -119,20 +115,6 @@ def detect_fetch(temp_file, weight_path):
     result = detect(source=temp_file, weights=weight_path)
     return result
 
-@app.route('/counting/<id_counting>', methods=['PUT'])
-def update_data(id_counting):
-    quantity = request.json.get('quantity')
-    conn, cursor = connect_db()
-    query = f'UPDATE mb.analytics_counting_object SET real_transact = {quantity} WHERE id_counting = {id_counting};'
-    cursor.execute(query)
-    conn.commit()
-    cursor.close()
-    conn.close()
-    result = {
-        'success': True
-    }
-    
-    return result
         
 if __name__ == "__main__":
     try:
