@@ -125,8 +125,6 @@ def save_img(img_temp, labels_temp, output_path):
     return img_path
 
 def saveImgReal(img_temp, labels_temp, bankimg_path):
-    # base_path = dirname(abspath(__file__))
-    # bankimg_path = join(base_path, 'folder_img')
     img = cv2.imread(str(img_temp))
     df = pd.read_json(labels_temp)
     for data in df.values:
